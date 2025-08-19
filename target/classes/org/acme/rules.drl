@@ -1,0 +1,100 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+package org.acme
+
+// Import the Java classes you defined
+import org.acme.FlightIssue
+import org.acme.CompensationHelper
+
+global Integer maxRefundAllowed;
+global java.util.List approvedRefunds;
+
+
+// Rule 1: Limit compensation for flight delays based on loyalty status
+rule "Delay Compensation for Basic Loyalty"
+when
+    $1: FlightIssue(issueType == "delay", issueDuration > 2, customerLoyaltyStatus == "basic")
+then
+    modify($1) { setCustomerCompensation(50.0) };
+    modify($1) { setApproved(true) };
+end
+
+rule "Delay Compensation for Silver Loyalty"
+when
+    $1: FlightIssue(issueType == "delay", issueDuration > 2, customerLoyaltyStatus == "silver")
+then
+    modify($1) { setCustomerCompensation(100.0) };
+    modify($1) { setApproved(true) };
+end
+
+rule "Delay Compensation for Gold Loyalty"
+when
+    $1: FlightIssue(issueType == "delay", issueDuration > 2, customerLoyaltyStatus == "gold")
+then
+    modify($1) { setCustomerCompensation(150.0) };
+    modify($1) { setApproved(true) };
+end
+
+// Rule 2: Cap compensation for flight cancellations
+rule "Cancellation Compensation Cap"
+when
+    $1: FlightIssue(issueType == "cancellation")
+then
+    modify($1) { setCustomerCompensation(Math.min($1.getCustomerCompensation(), 200.0)) };
+    modify($1) { setApproved(true) };
+end
+
+// Rule 3: Offer voucher instead of cash for minor issues
+rule "Voucher for Minor Issues"
+when
+    $1: FlightIssue(issueType == "delay", issueDuration <= 2)
+then
+    modify($1) { setCustomerCompensation(0.0) };
+    modify($1) { setApproved(false) };
+end
+
+// Rule 4: Consider customer history for loyalty benefits
+rule "Loyalty Benefits for Frequent Flyers"
+when
+    $1: FlightIssue(customerLoyaltyStatus == "gold", issueType == "cancellation")
+then
+    // Additional compensation for gold members
+    modify($1) { setCustomerCompensation($1.getCustomerCompensation() + 50.0) }; 
+    modify($1) { setApproved(true) };
+end
+
+// Rule 5: Limit total compensation per customer per year
+rule "Annual Compensation Limit"
+when
+    $1: FlightIssue(customerCompensation > 500.0)
+then
+    // Adjust compensation based on previous claims using the helper function
+    modify($1) { setCustomerCompensation(Math.max(0, 500.0 - CompensationHelper.getPreviousCompensationThisYear())) };
+    modify($1) { setApproved(true) };
+end 
+
+rule CollectApprovedRefund when
+    $1: FlightIssue( approved )
+then
+    if (!approvedRefunds.contains($1)) {
+        approvedRefunds.add($1);
+    }
+end

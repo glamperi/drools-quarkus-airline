@@ -1,0 +1,28 @@
+package org.acme.PDF;
+
+
+import static org.acme.Rulesca50d071e601484ba72f9651b55e5575.*;
+import org.acme.*;
+import org.acme.CompensationHelper;
+import org.acme.FlightIssue;
+import org.drools.modelcompiler.dsl.pattern.D;
+
+@org.drools.compiler.kie.builder.MaterializedLambda()
+public enum LambdaConsequenceDFF9645157A0BAAA89F60C777C68F575 implements org.drools.model.functions.Block2<org.drools.model.Drools, org.acme.FlightIssue>, org.drools.model.functions.HashedExpression {
+
+    INSTANCE;
+
+    public static final String EXPRESSION_HASH = "9F37BC84EED9D8A36B6E1262D040015E";
+
+    public java.lang.String getExpressionHash() {
+        return EXPRESSION_HASH;
+    }
+
+    private final org.drools.model.BitMask mask_$issue = org.drools.model.BitMask.getPatternMask(DomainClassesMetadataca50d071e601484ba72f9651b55e5575.org_acme_FlightIssue_Metadata_INSTANCE, "customerCompensation");
+
+    @Override()
+    public void execute(org.drools.model.Drools drools, org.acme.FlightIssue $issue) throws java.lang.Exception {
+        $issue.setCustomerCompensation(150.0);
+        drools.update($issue, mask_$issue);
+    }
+}
